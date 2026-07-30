@@ -8,6 +8,7 @@ import {
   IdCard,
   Mail,
   FileSignature,
+  SpellCheck,
   Upload,
   X,
   CheckCircle2,
@@ -76,6 +77,12 @@ const types: {
     icon: Presentation,
   },
   {
+    value: "correction",
+    label: "Correction",
+    desc: "Corrige un document existant : le fichier est obligatoire.",
+    icon: SpellCheck,
+  },
+  {
     value: "cv",
     label: "CV",
     desc: "Parcours, compétences, mise en page sobre.",
@@ -114,6 +121,9 @@ function NewProjectPage() {
   const [dragOver, setDragOver] = useState(false);
 
   const projectFiles = projectId ? sourceFiles.filter((f) => f.projectId === projectId) : [];
+  // La correction retravaille un texte existant : sans fichier source, il n'y a
+  // rien à corriger.
+  const requiresSource = type === "correction";
 
   const ensureProject = async (): Promise<string | null> => {
     if (projectId) return projectId;
@@ -151,10 +161,14 @@ function NewProjectPage() {
       toast.error(`Champ obligatoire : ${missing[0].label}.`);
       return;
     }
+    if (requiresSource && projectFiles.length === 0) {
+      toast.error("Chargez le document à corriger avant de lancer la correction.");
+      return;
+    }
     const id = await ensureProject();
     if (!id) return;
     await generateOutline(id);
-    toast.success("Plan en cours de génération.");
+    toast.success(requiresSource ? "Correction en cours." : "Plan en cours de génération.");
     navigate({ to: "/projects/$id/plan", params: { id } });
   };
 
@@ -274,6 +288,12 @@ function NewProjectPage() {
             <h2 className="font-editorial text-sm uppercase tracking-[0.18em] text-ink-mute">
               Sources
             </h2>
+            {requiresSource && (
+              <p className="mt-2 text-xs text-ink-soft">
+                Document à corriger&nbsp;: <strong className="text-ink">obligatoire</strong>. La
+                correction s'applique au texte que vous chargez ici.
+              </p>
+            )}
             <label
               onDragOver={(e) => {
                 e.preventDefault();
@@ -368,7 +388,7 @@ function NewProjectPage() {
               onClick={submit}
               className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:opacity-90"
             >
-              Générer le plan
+              {requiresSource ? "Lancer la correction" : "Générer le plan"}
             </button>
           </div>
         </div>
