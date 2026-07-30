@@ -6,6 +6,9 @@ import { adminIsAdmin } from "@/backend/admin.functions";
 import { AppShell } from "@/components/app/AppShell";
 
 export const Route = createFileRoute("/admin")({
+  // La vérification du rôle se fait via un appel serveur authentifié par le
+  // jeton du navigateur : ce rendu doit donc rester côté client.
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Administration — myDoc IA" },
@@ -33,11 +36,15 @@ const tabs = [
 
 function AdminLayout() {
   const check = useServerFn(adminIsAdmin);
-  const { data, isPending } = useQuery({ queryKey: ["admin", "is-admin"], queryFn: () => check() });
+  const { data, isPending, isFetching } = useQuery({
+    queryKey: ["admin", "is-admin"],
+    queryFn: () => check(),
+    retry: 1,
+  });
 
   return (
     <AppShell>
-      {isPending ? (
+      {isPending || isFetching ? (
         <p className="text-sm text-ink-soft">Vérification des droits…</p>
       ) : !data?.isAdmin ? (
         <Navigate to="/dashboard" />
