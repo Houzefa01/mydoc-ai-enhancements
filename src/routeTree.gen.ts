@@ -15,6 +15,8 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ProjectsNewRouteImport } from './routes/projects.new'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminExportsRouteImport } from './routes/admin.exports'
 import { Route as ProjectsIdPlanRouteImport } from './routes/projects.$id.plan'
 import { Route as ProjectsIdHistoryRouteImport } from './routes/projects.$id.history'
 import { Route as ProjectsIdExportRouteImport } from './routes/projects.$id.export'
@@ -50,6 +52,16 @@ const ProjectsNewRoute = ProjectsNewRouteImport.update({
   path: '/projects/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminExportsRoute = AdminExportsRouteImport.update({
+  id: '/exports',
+  path: '/exports',
+  getParentRoute: () => AdminRoute,
+} as any)
 const ProjectsIdPlanRoute = ProjectsIdPlanRouteImport.update({
   id: '/projects/$id/plan',
   path: '/projects/$id/plan',
@@ -76,6 +88,8 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/settings': typeof SettingsRoute
+  '/admin/exports': typeof AdminExportsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/projects/new': typeof ProjectsNewRoute
   '/admin/': typeof AdminIndexRoute
   '/projects/$id/editor': typeof ProjectsIdEditorRoute
@@ -87,6 +101,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/settings': typeof SettingsRoute
+  '/admin/exports': typeof AdminExportsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/projects/new': typeof ProjectsNewRoute
   '/admin': typeof AdminIndexRoute
   '/projects/$id/editor': typeof ProjectsIdEditorRoute
@@ -100,6 +116,8 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/settings': typeof SettingsRoute
+  '/admin/exports': typeof AdminExportsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/projects/new': typeof ProjectsNewRoute
   '/admin/': typeof AdminIndexRoute
   '/projects/$id/editor': typeof ProjectsIdEditorRoute
@@ -114,6 +132,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dashboard'
     | '/settings'
+    | '/admin/exports'
+    | '/admin/users'
     | '/projects/new'
     | '/admin/'
     | '/projects/$id/editor'
@@ -125,6 +145,8 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/settings'
+    | '/admin/exports'
+    | '/admin/users'
     | '/projects/new'
     | '/admin'
     | '/projects/$id/editor'
@@ -137,6 +159,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dashboard'
     | '/settings'
+    | '/admin/exports'
+    | '/admin/users'
     | '/projects/new'
     | '/admin/'
     | '/projects/$id/editor'
@@ -201,6 +225,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/exports': {
+      id: '/admin/exports'
+      path: '/exports'
+      fullPath: '/admin/exports'
+      preLoaderRoute: typeof AdminExportsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/projects/$id/plan': {
       id: '/projects/$id/plan'
       path: '/projects/$id/plan'
@@ -233,10 +271,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminExportsRoute: typeof AdminExportsRoute
+  AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminExportsRoute: AdminExportsRoute,
+  AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
