@@ -31,6 +31,7 @@ import {
   type User,
 } from "@/backend";
 import { typeLabels } from "./labels";
+import { EXPORT_CREDIT_COST, generationCreditCost } from "./creditCosts";
 
 const emptyCredits: CreditBalance = { balance: 0, transactions: [] };
 
@@ -67,7 +68,8 @@ interface Store {
   updateSourceFileDescription: (fileId: string, description: string) => Promise<void>;
   removeSourceFile: (fileId: string) => Promise<void>;
 
-  generateOutline: (projectId: string) => Promise<void>;
+  /** Renvoie un message d'erreur (crédits insuffisants…) ou null. */
+  generateOutline: (projectId: string) => Promise<string | null>;
   updateSections: (projectId: string, sections: Section[]) => Promise<void>;
   regenerateSection: (projectId: string, sectionId: string) => Promise<void>;
   updateSectionTitle: (projectId: string, sectionId: string, title: string) => Promise<void>;
@@ -285,12 +287,37 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       },
 
       generateOutline: async (projectId) => {
+        const project = projects.find((p) => p.id === projectId);
+        if (!project) return "Projet introuvable.";
+
+        // Coût variable pour la correction : il dépend du volume de texte fourni.
+        const sourceWords = sourceFiles
+          .filter((f) => f.projectId === projectId)
+          .reduce((n, f) => n + (f.extractedText ?? "").split(/\s+/).filter(Boolean).length, 0);
+        const cost = generationCreditCost(project.type, sourceWords);
+
+        if (userId && cost > 0) {
+          if (credits.balance < cost)
+            return `Crédits insuffisants : ${cost} crédits nécessaires, ${credits.balance} disponibles.`;
+        }
+
         const doc = await ensureDocument(projectId);
-        if (!doc) return;
+        if (!doc) return "Génération impossible.";
         await projectsApi.setStatus(projectId, "plan_pret");
         setProjects((ps) =>
           ps.map((p) => (p.id === projectId ? { ...p, status: "plan_pret" } : p)),
         );
+
+        if (userId && cost > 0) {
+          await creditsApi.adjust(
+            userId,
+            -cost,
+            `${project.type === "correction" ? "Correction" : "Génération"} — ${project.title}`,
+            credits.balance,
+          );
+          await refreshCredits(userId);
+        }
+        return null;
       },
 
       updateSections: (projectId, sections) => persistSections(projectId, sections),
@@ -405,7 +432,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         );
         await creditsApi.adjust(
           userId,
-          -1,
+          -EXPORT_CREDIT_COST,
           `Export ${format.toUpperCase()} — ${project.title}`,
           credits.balance,
         );
