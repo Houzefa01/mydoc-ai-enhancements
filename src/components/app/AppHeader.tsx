@@ -1,5 +1,8 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Coins, FolderOpen, LogOut, Settings, UserRound } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { Coins, FolderOpen, LogOut, Settings, ShieldCheck, UserRound } from "lucide-react";
+import { adminIsAdmin } from "@/backend/admin.functions";
 import { useStore } from "@/lib/store";
 import { ThemeToggle } from "@/components/app/ThemeToggle";
 import {
@@ -13,6 +16,15 @@ import {
 export function AppHeader() {
   const { user, credits, logout } = useStore();
   const navigate = useNavigate();
+  const checkAdmin = useServerFn(adminIsAdmin);
+  // L'entrée d'administration n'est qu'un raccourci : les droits sont
+  // re-vérifiés côté serveur à chaque action.
+  const { data: adminCheck } = useQuery({
+    queryKey: ["admin", "is-admin"],
+    queryFn: () => checkAdmin(),
+    enabled: Boolean(user),
+  });
+  const isAdmin = Boolean(adminCheck?.isAdmin);
 
   return (
     <header className="sticky top-0 z-40 border-b border-rule bg-paper shadow-[0_1px_0_var(--rule)]">
@@ -79,6 +91,12 @@ export function AppHeader() {
                 <DropdownMenuItem onSelect={() => navigate({ to: "/settings" })}>
                   <Settings className="mr-2 h-4 w-4" /> Paramètres
                 </DropdownMenuItem>
+
+                {isAdmin && (
+                  <DropdownMenuItem onSelect={() => navigate({ to: "/admin" })}>
+                    <ShieldCheck className="mr-2 h-4 w-4" /> Administration
+                  </DropdownMenuItem>
+                )}
 
                 <DropdownMenuItem
                   onSelect={() => {
