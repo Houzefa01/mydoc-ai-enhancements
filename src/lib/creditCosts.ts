@@ -26,3 +26,17 @@ export const CORRECTION_CREDIT_COST = GENERATION_CREDIT_COST.correction;
 
 /** Coût d'un export, quel que soit le format. */
 export const EXPORT_CREDIT_COST = 1;
+
+/**
+ * Coût d'une correction : variable, car il dépend de la longueur du texte à
+ * relire. Base fixe + 1 crédit par tranche entamée de 1 000 mots.
+ */
+export function correctionCreditCost(wordCount: number): number {
+  const perThousand = Math.ceil(Math.max(0, wordCount) / 1000);
+  return CORRECTION_CREDIT_COST + perThousand;
+}
+
+/** Coût d'une génération, tous types confondus. */
+export function generationCreditCost(type: DocumentType, wordCount = 0): number {
+  return type === "correction" ? correctionCreditCost(wordCount) : GENERATION_CREDIT_COST[type];
+}
