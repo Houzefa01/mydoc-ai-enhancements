@@ -32,6 +32,7 @@ const tabs = [
   { to: "/admin", label: "Statistiques", exact: true },
   { to: "/admin/users", label: "Comptes" },
   { to: "/admin/exports", label: "Exports en échec" },
+  { to: "/admin/settings", label: "Paramètres système" },
 ] as const;
 
 function AdminLayout() {

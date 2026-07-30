@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ProjectsNewRouteImport } from './routes/projects.new'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminExportsRouteImport } from './routes/admin.exports'
 import { Route as ProjectsIdPlanRouteImport } from './routes/projects.$id.plan'
 import { Route as ProjectsIdHistoryRouteImport } from './routes/projects.$id.history'
@@ -57,6 +58,11 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminExportsRoute = AdminExportsRouteImport.update({
   id: '/exports',
   path: '/exports',
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/settings': typeof SettingsRoute
   '/admin/exports': typeof AdminExportsRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/projects/new': typeof ProjectsNewRoute
   '/admin/': typeof AdminIndexRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/settings': typeof SettingsRoute
   '/admin/exports': typeof AdminExportsRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/projects/new': typeof ProjectsNewRoute
   '/admin': typeof AdminIndexRoute
@@ -117,6 +125,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/settings': typeof SettingsRoute
   '/admin/exports': typeof AdminExportsRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/projects/new': typeof ProjectsNewRoute
   '/admin/': typeof AdminIndexRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/settings'
     | '/admin/exports'
+    | '/admin/settings'
     | '/admin/users'
     | '/projects/new'
     | '/admin/'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/settings'
     | '/admin/exports'
+    | '/admin/settings'
     | '/admin/users'
     | '/projects/new'
     | '/admin'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/settings'
     | '/admin/exports'
+    | '/admin/settings'
     | '/admin/users'
     | '/projects/new'
     | '/admin/'
@@ -232,6 +244,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/exports': {
       id: '/admin/exports'
       path: '/exports'
@@ -272,12 +291,14 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminExportsRoute: typeof AdminExportsRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminExportsRoute: AdminExportsRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
