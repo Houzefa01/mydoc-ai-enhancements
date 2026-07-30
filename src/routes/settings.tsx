@@ -46,7 +46,7 @@ export const Route = createFileRoute("/settings")({
 const quickAmounts = [10, 50, 100, 250, 500];
 
 function SettingsPage() {
-  const { user, credits, purchaseCredits, updateProfile, changePassword } = useStore();
+  const { user, credits, settings, purchaseCredits, updateProfile, changePassword } = useStore();
   const [profile, setProfile] = useState({
     name: user?.name ?? "",
     email: user?.email ?? "",
@@ -327,7 +327,7 @@ function SettingsPage() {
           </CardHeader>
           <CardContent>
             <Badge variant="outline" className="border-brass/40 text-brass">
-              1 crédit ≈ 0,15 €
+              1 crédit = {settings.creditPrice.toFixed(2)} $
             </Badge>
           </CardContent>
         </Card>
@@ -418,7 +418,7 @@ function SettingsPage() {
                     className="w-28 text-center font-numeric text-lg"
                   />
                   <div className="font-numeric text-2xl text-ink tabular-nums">
-                    {(customAmount * 0.15).toFixed(2)} €
+                    {(customAmount * settings.creditPrice).toFixed(2)} $
                   </div>
                 </div>
                 <div className="mt-4 px-1">
