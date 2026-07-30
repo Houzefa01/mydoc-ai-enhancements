@@ -167,7 +167,11 @@ function NewProjectPage() {
     }
     const id = await ensureProject();
     if (!id) return;
-    await generateOutline(id);
+    const error = await generateOutline(id);
+    if (error) {
+      toast.error(error);
+      return;
+    }
     toast.success(requiresSource ? "Correction en cours." : "Plan en cours de génération.");
     navigate({ to: "/projects/$id/plan", params: { id } });
   };
