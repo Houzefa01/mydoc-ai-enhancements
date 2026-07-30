@@ -6,27 +6,34 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  ScriptOnce,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { StoreProvider } from "../lib/store";
+import { ThemeProvider, themeBootstrapScript } from "../lib/theme";
+import { Toaster } from "../components/ui/sonner";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-dvh items-center justify-center bg-paper px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+        <div className="font-numeric text-xs uppercase tracking-[0.24em] text-ink-mute">
+          Erreur 404
+        </div>
+        <h1 className="mt-3 font-editorial text-4xl text-ink">Page introuvable</h1>
+        <p className="mt-3 text-sm text-ink-soft">
+          Cette adresse ne correspond à aucun document. Vérifiez le lien ou revenez à votre espace
+          de travail.
         </p>
         <div className="mt-6">
           <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            to="/dashboard"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90"
           >
-            Go home
+            Revenir aux projets
           </Link>
         </div>
       </div>
@@ -42,13 +49,11 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-dvh items-center justify-center bg-paper px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+        <h1 className="font-editorial text-2xl text-ink">Cette page n'a pas pu s'afficher</h1>
+        <p className="mt-2 text-sm text-ink-soft">
+          Un problème est survenu au chargement. Rechargez pour réessayer, ou revenez à vos projets.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -56,15 +61,15 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90"
           >
-            Try again
+            Recharger
           </button>
           <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            href="/dashboard"
+            className="inline-flex items-center justify-center rounded-md border border-rule bg-card px-4 py-2 text-sm font-medium text-ink transition hover:bg-paper-deep"
           >
-            Go home
+            Mes projets
           </a>
         </div>
       </div>
@@ -77,21 +82,52 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "myDoc IA — Rédigez et exportez vos documents" },
+      {
+        name: "description",
+        content:
+          "myDoc IA génère rapports, résumés, mémoires et présentations à partir de vos sources, puis les exporte en PDF, DOCX, PPTX, LaTeX et Beamer.",
+      },
+      { name: "author", content: "myDoc IA" },
+      { property: "og:title", content: "myDoc IA — L'atelier d'écriture assistée" },
+      {
+        property: "og:description",
+        content:
+          "Structurez, rédigez et exportez vos documents professionnels à partir de vos propres sources.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
+      { property: "og:site_name", content: "myDoc IA" },
+      { property: "og:locale", content: "fr_FR" },
     ],
     links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      {
+        rel: "preconnect",
+        href: "https://fonts.gstatic.com",
+        crossOrigin: "anonymous",
+      },
       {
         rel: "stylesheet",
-        href: appCss,
+        href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap",
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: "myDoc IA",
+          applicationCategory: "BusinessApplication",
+          operatingSystem: "Web",
+          inLanguage: "fr-FR",
+          description:
+            "Atelier d'écriture assistée : génération de rapports, résumés, mémoires et présentations à partir de vos sources, avec export PDF, DOCX, PPTX, LaTeX et Beamer.",
+        }),
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -102,11 +138,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="fr" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
       <body>
+        <ScriptOnce>{themeBootstrapScript}</ScriptOnce>
         {children}
         <Scripts />
       </body>
@@ -119,8 +156,12 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <ThemeProvider>
+        <StoreProvider>
+          <Outlet />
+          <Toaster position="bottom-right" />
+        </StoreProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

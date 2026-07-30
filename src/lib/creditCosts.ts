@@ -1,0 +1,42 @@
+import type { DocumentType } from "@/backend/types";
+
+/**
+ * Coûts en crédits — source unique de vérité.
+ *
+ * Aucune valeur de crédit ne doit être écrite en dur ailleurs dans le code :
+ * si un tarif change, il change ici et nulle part ailleurs.
+ */
+
+/** Coût d'une génération complète, par type de document. */
+export const GENERATION_CREDIT_COST: Record<DocumentType, number> = {
+  rapport: 5,
+  resume: 3,
+  memoire: 8,
+  presentation: 4,
+  // Une correction retravaille un texte déjà écrit : moins coûteux qu'une
+  // rédaction complète à partir d'un plan.
+  correction: 2,
+  cv: 3,
+  lettre_motivation: 2,
+  lettre_demande: 2,
+};
+
+/** Coût spécifique de la correction, exposé nommément pour le branchement backend. */
+export const CORRECTION_CREDIT_COST = GENERATION_CREDIT_COST.correction;
+
+/** Coût d'un export, quel que soit le format. */
+export const EXPORT_CREDIT_COST = 1;
+
+/**
+ * Coût d'une correction : variable, car il dépend de la longueur du texte à
+ * relire. Base fixe + 1 crédit par tranche entamée de 1 000 mots.
+ */
+export function correctionCreditCost(wordCount: number): number {
+  const perThousand = Math.ceil(Math.max(0, wordCount) / 1000);
+  return CORRECTION_CREDIT_COST + perThousand;
+}
+
+/** Coût d'une génération, tous types confondus. */
+export function generationCreditCost(type: DocumentType, wordCount = 0): number {
+  return type === "correction" ? correctionCreditCost(wordCount) : GENERATION_CREDIT_COST[type];
+}
