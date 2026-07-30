@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ShieldCheck } from "lucide-react";
 import { adminIsAdmin } from "@/backend/admin.functions";
 import { AppShell } from "@/components/app/AppShell";
+import { useSessionReady } from "@/lib/useSessionReady";
 
 export const Route = createFileRoute("/admin")({
   // La vérification du rôle se fait via un appel serveur authentifié par le
@@ -37,15 +38,18 @@ const tabs = [
 
 function AdminLayout() {
   const check = useServerFn(adminIsAdmin);
+  const { ready, hasSession } = useSessionReady();
   const { data, isPending, isFetching } = useQuery({
     queryKey: ["admin", "is-admin"],
     queryFn: () => check(),
     retry: 1,
+    // Sans jeton, l'appel serveur échouerait en « Unauthorized ».
+    enabled: ready && hasSession,
   });
 
   return (
     <AppShell>
-      {isPending || isFetching ? (
+      {!ready || (hasSession && (isPending || isFetching)) ? (
         <p className="text-sm text-ink-soft">Vérification des droits…</p>
       ) : !data?.isAdmin ? (
         <Navigate to="/dashboard" />

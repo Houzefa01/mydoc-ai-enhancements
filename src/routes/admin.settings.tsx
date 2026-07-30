@@ -70,6 +70,11 @@ function AdminSettingsPage() {
   const refreshModels = useMutation({
     mutationFn: () => listModels({ data: { provider } }),
     onSuccess: (result) => {
+      if (result.error) {
+        setModels([]);
+        setModelsError(result.error);
+        return;
+      }
       setModels(result.models);
       setModelsError(null);
       toast.success(`${result.models.length} modèles disponibles.`);
