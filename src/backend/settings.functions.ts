@@ -144,8 +144,13 @@ export const adminListSettingsHistory = createServerFn({ method: "GET" })
 export const adminListProviderModels = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { provider: string }) => data)
-  .handler(async ({ data, context }): Promise<{ models: string[] }> => {
+  .handler(async ({ data, context }): Promise<{ models: string[]; error: string | null }> => {
     await assertAdmin(context);
     const { listProviderModels } = await import("./ai.server");
-    return { models: await listProviderModels(data.provider) };
+    // On renvoie l'erreur au lieu de la lever : elle est affichée dans l'interface.
+    try {
+      return { models: await listProviderModels(data.provider), error: null };
+    } catch (error) {
+      return { models: [], error: (error as Error).message };
+    }
   });
