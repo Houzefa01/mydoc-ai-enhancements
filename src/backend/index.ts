@@ -12,4 +12,6 @@ export { documentsApi } from "./documents.api";
 export { exportsApi } from "./exports.api";
 export { creditsApi } from "./credits.api";
 export { rolesApi, type AppRole } from "./roles.api";
+export { settingsApi } from "./settings.api";
+export type { SystemSettings, SettingsHistoryEntry } from "./settings.types";
 export { outlineByType } from "./outlines";
