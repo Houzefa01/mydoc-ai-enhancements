@@ -229,6 +229,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       credits,
 
       signIn: (email, password) => authApi.signIn(email, password),
+*** unused
       signUp: (input) => authApi.signUp(input),
       signInWithGoogle: () => authApi.signInWithGoogle(),
       sendPasswordReset: (email) => authApi.sendPasswordReset(email),
