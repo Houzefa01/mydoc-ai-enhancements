@@ -9,38 +9,177 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as ProjectsNewRouteImport } from './routes/projects.new'
+import { Route as ProjectsIdPlanRouteImport } from './routes/projects.$id.plan'
+import { Route as ProjectsIdHistoryRouteImport } from './routes/projects.$id.history'
+import { Route as ProjectsIdExportRouteImport } from './routes/projects.$id.export'
+import { Route as ProjectsIdEditorRouteImport } from './routes/projects.$id.editor'
 
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const ProjectsNewRoute = ProjectsNewRouteImport.update({
+  id: '/projects/new',
+  path: '/projects/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsIdPlanRoute = ProjectsIdPlanRouteImport.update({
+  id: '/projects/$id/plan',
+  path: '/projects/$id/plan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsIdHistoryRoute = ProjectsIdHistoryRouteImport.update({
+  id: '/projects/$id/history',
+  path: '/projects/$id/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsIdExportRoute = ProjectsIdExportRouteImport.update({
+  id: '/projects/$id/export',
+  path: '/projects/$id/export',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsIdEditorRoute = ProjectsIdEditorRouteImport.update({
+  id: '/projects/$id/editor',
+  path: '/projects/$id/editor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/dashboard': typeof DashboardRoute
+  '/settings': typeof SettingsRoute
+  '/projects/new': typeof ProjectsNewRoute
+  '/admin/': typeof AdminIndexRoute
+  '/projects/$id/editor': typeof ProjectsIdEditorRoute
+  '/projects/$id/export': typeof ProjectsIdExportRoute
+  '/projects/$id/history': typeof ProjectsIdHistoryRoute
+  '/projects/$id/plan': typeof ProjectsIdPlanRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
+  '/settings': typeof SettingsRoute
+  '/projects/new': typeof ProjectsNewRoute
+  '/admin': typeof AdminIndexRoute
+  '/projects/$id/editor': typeof ProjectsIdEditorRoute
+  '/projects/$id/export': typeof ProjectsIdExportRoute
+  '/projects/$id/history': typeof ProjectsIdHistoryRoute
+  '/projects/$id/plan': typeof ProjectsIdPlanRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/dashboard': typeof DashboardRoute
+  '/settings': typeof SettingsRoute
+  '/projects/new': typeof ProjectsNewRoute
+  '/admin/': typeof AdminIndexRoute
+  '/projects/$id/editor': typeof ProjectsIdEditorRoute
+  '/projects/$id/export': typeof ProjectsIdExportRoute
+  '/projects/$id/history': typeof ProjectsIdHistoryRoute
+  '/projects/$id/plan': typeof ProjectsIdPlanRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/dashboard'
+    | '/settings'
+    | '/projects/new'
+    | '/admin/'
+    | '/projects/$id/editor'
+    | '/projects/$id/export'
+    | '/projects/$id/history'
+    | '/projects/$id/plan'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/settings'
+    | '/projects/new'
+    | '/admin'
+    | '/projects/$id/editor'
+    | '/projects/$id/export'
+    | '/projects/$id/history'
+    | '/projects/$id/plan'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/dashboard'
+    | '/settings'
+    | '/projects/new'
+    | '/admin/'
+    | '/projects/$id/editor'
+    | '/projects/$id/export'
+    | '/projects/$id/history'
+    | '/projects/$id/plan'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
+  DashboardRoute: typeof DashboardRoute
+  SettingsRoute: typeof SettingsRoute
+  ProjectsNewRoute: typeof ProjectsNewRoute
+  ProjectsIdEditorRoute: typeof ProjectsIdEditorRoute
+  ProjectsIdExportRoute: typeof ProjectsIdExportRoute
+  ProjectsIdHistoryRoute: typeof ProjectsIdHistoryRoute
+  ProjectsIdPlanRoute: typeof ProjectsIdPlanRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +187,72 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/projects/new': {
+      id: '/projects/new'
+      path: '/projects/new'
+      fullPath: '/projects/new'
+      preLoaderRoute: typeof ProjectsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects/$id/plan': {
+      id: '/projects/$id/plan'
+      path: '/projects/$id/plan'
+      fullPath: '/projects/$id/plan'
+      preLoaderRoute: typeof ProjectsIdPlanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects/$id/history': {
+      id: '/projects/$id/history'
+      path: '/projects/$id/history'
+      fullPath: '/projects/$id/history'
+      preLoaderRoute: typeof ProjectsIdHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects/$id/export': {
+      id: '/projects/$id/export'
+      path: '/projects/$id/export'
+      fullPath: '/projects/$id/export'
+      preLoaderRoute: typeof ProjectsIdExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects/$id/editor': {
+      id: '/projects/$id/editor'
+      path: '/projects/$id/editor'
+      fullPath: '/projects/$id/editor'
+      preLoaderRoute: typeof ProjectsIdEditorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
+  DashboardRoute: DashboardRoute,
+  SettingsRoute: SettingsRoute,
+  ProjectsNewRoute: ProjectsNewRoute,
+  ProjectsIdEditorRoute: ProjectsIdEditorRoute,
+  ProjectsIdExportRoute: ProjectsIdExportRoute,
+  ProjectsIdHistoryRoute: ProjectsIdHistoryRoute,
+  ProjectsIdPlanRoute: ProjectsIdPlanRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
