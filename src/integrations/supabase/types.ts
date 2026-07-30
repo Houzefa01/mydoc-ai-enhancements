@@ -310,6 +310,66 @@ export type Database = {
           },
         ]
       }
+      system_settings: {
+        Row: {
+          ai_model: string
+          ai_provider: string
+          created_at: string
+          credit_price: number
+          id: string
+          tokens_per_credit: number
+          updated_at: string
+        }
+        Insert: {
+          ai_model?: string
+          ai_provider?: string
+          created_at?: string
+          credit_price?: number
+          id?: string
+          tokens_per_credit?: number
+          updated_at?: string
+        }
+        Update: {
+          ai_model?: string
+          ai_provider?: string
+          created_at?: string
+          credit_price?: number
+          id?: string
+          tokens_per_credit?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      system_settings_history: {
+        Row: {
+          changed_by: string | null
+          changed_by_email: string
+          created_at: string
+          id: string
+          new_value: string
+          old_value: string
+          setting_key: string
+        }
+        Insert: {
+          changed_by?: string | null
+          changed_by_email?: string
+          created_at?: string
+          id?: string
+          new_value?: string
+          old_value?: string
+          setting_key: string
+        }
+        Update: {
+          changed_by?: string | null
+          changed_by_email?: string
+          created_at?: string
+          id?: string
+          new_value?: string
+          old_value?: string
+          setting_key?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
