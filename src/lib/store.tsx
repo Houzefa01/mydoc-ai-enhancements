@@ -17,6 +17,7 @@ import {
   profileApi,
   projectsApi,
   sourcesApi,
+  settingsApi,
   type CreditBalance,
   type DocumentContent,
   type DocumentType,
@@ -31,7 +32,8 @@ import {
   type User,
 } from "@/backend";
 import { typeLabels } from "./labels";
-import { EXPORT_CREDIT_COST, generationCreditCost } from "./creditCosts";
+import { exportCreditCost, generationCreditCost } from "./creditCosts";
+import { DEFAULT_SETTINGS, type SystemSettings } from "@/backend/settings.types";
 
 const emptyCredits: CreditBalance = { balance: 0, transactions: [] };
 
@@ -45,6 +47,8 @@ interface Store {
   documents: Record<string, DocumentContent>;
   exports: ExportJob[];
   credits: CreditBalance;
+  /** Paramètres système globaux (tarification, modèle IA actif). */
+  settings: SystemSettings;
 
   signIn: (email: string, password: string) => Promise<string | null>;
   signUp: (input: SignUpInput) => Promise<string | null>;
@@ -115,6 +119,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [documents, setDocuments] = useState<Record<string, DocumentContent>>({});
   const [exports, setExports] = useState<ExportJob[]>([]);
   const [credits, setCredits] = useState<CreditBalance>(emptyCredits);
+  const [settings, setSettings] = useState<SystemSettings>(DEFAULT_SETTINGS);
 
   const avatarPath = useRef<string | null>(null);
 
@@ -143,13 +148,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const loadAll = useCallback(async (uid: string) => {
     setLoading(true);
-    const [profile, projectList, sources, docs, exportList, creditState] = await Promise.all([
+    const [profile, projectList, sources, docs, exportList, creditState, systemSettings] =
+      await Promise.all([
       profileApi.get(uid),
       projectsApi.list(),
       sourcesApi.list(),
       documentsApi.list(),
       exportsApi.list(),
       creditsApi.get(uid),
+      settingsApi.get(),
     ]);
 
     if (profile) {
@@ -161,6 +168,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setDocuments(docs);
     setExports(exportList);
     setCredits(creditState);
+    setSettings(systemSettings);
     setLoading(false);
   }, []);
 
@@ -294,7 +302,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const sourceWords = sourceFiles
           .filter((f) => f.projectId === projectId)
           .reduce((n, f) => n + (f.extractedText ?? "").split(/\s+/).filter(Boolean).length, 0);
-        const cost = generationCreditCost(project.type, sourceWords);
+        const cost = generationCreditCost(project.type, sourceWords, settings.tokensPerCredit);
 
         if (userId && cost > 0) {
           if (credits.balance < cost)
@@ -432,7 +440,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         );
         await creditsApi.adjust(
           userId,
-          -EXPORT_CREDIT_COST,
+          -exportCreditCost(settings.tokensPerCredit),
           `Export ${format.toUpperCase()} — ${project.title}`,
           credits.balance,
         );
@@ -483,6 +491,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     documents,
     exports,
     credits,
+      settings,
     persistSections,
     refreshCredits,
   ]);
