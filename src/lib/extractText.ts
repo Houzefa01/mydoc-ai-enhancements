@@ -29,12 +29,13 @@ async function extractPdf(file: File): Promise<string> {
     );
     if (parts.join("\n").length > MAX_CHARS) break;
   }
-  await doc.destroy();
   return parts.join("\n\n");
 }
 
 async function extractDocx(file: File): Promise<string> {
-  const mammoth = await import("mammoth/mammoth.browser.js");
+  const mammoth = (await import("mammoth/mammoth.browser.js")) as unknown as {
+    extractRawText: (input: { arrayBuffer: ArrayBuffer }) => Promise<{ value: string }>;
+  };
   const result = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
   return result.value;
 }
