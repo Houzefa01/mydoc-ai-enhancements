@@ -133,7 +133,11 @@ export const adminListSettingsHistory = createServerFn({ method: "GET" })
     return (data ?? []).map((r) => ({
       id: r.id,
       settingKey: r.setting_key,
-      settingLabel: SETTING_LABELS[r.setting_key] ?? r.setting_key,
+      settingLabel:
+        SETTING_LABELS[r.setting_key] ??
+        (r.setting_key.startsWith("api_key_")
+          ? `Clé d'API — ${r.setting_key.replace("api_key_", "")}`
+          : r.setting_key),
       oldValue: r.old_value ?? "",
       newValue: r.new_value ?? "",
       changedByEmail: r.changed_by_email ?? "",
