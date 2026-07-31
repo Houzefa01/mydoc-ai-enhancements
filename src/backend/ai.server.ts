@@ -108,6 +108,60 @@ export async function listProviderModels(provider: string): Promise<string[]> {
 }
 
 /**
+ * Teste une clé d'API auprès du fournisseur, sans jamais l'enregistrer ni la
+ * renvoyer : on tente un appel réel à l'endpoint des modèles.
+ *
+ * Si aucune clé n'est fournie, c'est la clé déjà configurée qui est testée.
+ */
+export async function verifyProviderKey(
+  providerId: string,
+  candidateKey?: string,
+): Promise<{ ok: boolean; message: string; masked: string; modelCount: number }> {
+  const config = providerOrThrow(providerId);
+  const key = (candidateKey ?? "").trim() || (await providerApiKey(providerId, config)) || "";
+  const masked = key ? `••••${key.slice(-4)}` : "";
+
+  if (!key)
+    return {
+      ok: false,
+      message: `Aucune clé disponible pour ${config.label} : saisissez-en une avant de tester.`,
+      masked,
+      modelCount: 0,
+    };
+
+  let response: Response;
+  try {
+    response = await fetch(config.modelsUrl, { headers: { Authorization: `Bearer ${key}` } });
+  } catch {
+    return {
+      ok: false,
+      message: `Impossible de joindre l'API ${config.label}.`,
+      masked,
+      modelCount: 0,
+    };
+  }
+
+  if (!response.ok) {
+    const detail = (await response.text()).slice(0, 200);
+    return {
+      ok: false,
+      message: `Clé refusée par ${config.label} (${response.status})${detail ? ` — ${detail}` : ""}.`,
+      masked,
+      modelCount: 0,
+    };
+  }
+
+  const payload = (await response.json().catch(() => ({}))) as { data?: { id?: string }[] };
+  const modelCount = (payload.data ?? []).filter((m) => Boolean(m.id)).length;
+  return {
+    ok: true,
+    message: `Clé valide pour ${config.label} — ${modelCount} modèles accessibles.`,
+    masked,
+    modelCount,
+  };
+}
+
+/**
  * Configuration de génération lue à chaque appel : un changement de modèle
  * dans l'espace admin prend effet immédiatement, sans redéploiement.
  */
