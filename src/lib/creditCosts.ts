@@ -68,3 +68,14 @@ export function generationCreditCost(
     ? correctionCreditCost(wordCount, tokensPerCredit)
     : creditsForTokens(GENERATION_TOKEN_COST[type], tokensPerCredit);
 }
+
+/**
+ * Nombre de mots total des sources d'un projet — formule unique, partagée par
+ * l'estimation affichée avant génération et le décompte final des crédits.
+ */
+export function sourceWordCount(files: { extractedText?: string | null }[]): number {
+  return files.reduce(
+    (n, f) => n + (f.extractedText ?? "").split(/\s+/).filter(Boolean).length,
+    0,
+  );
+}
