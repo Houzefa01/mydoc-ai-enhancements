@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { DocumentType, SourceFile } from "@/backend/types";
 import { briefFields } from "@/lib/documentBriefs";
+import { generationCreditCost, sourceWordCount } from "@/lib/creditCosts";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/projects/new")({
@@ -110,6 +111,8 @@ function NewProjectPage() {
     generateOutline,
     updateSourceFileDescription,
     removeSourceFile,
+    settings,
+    credits,
   } = useStore();
   const navigate = useNavigate();
 
@@ -124,6 +127,11 @@ function NewProjectPage() {
   // La correction retravaille un texte existant : sans fichier source, il n'y a
   // rien à corriger.
   const requiresSource = type === "correction";
+
+  // Estimation affichée avant lancement : même formule que le décompte final.
+  const estimatedWords = sourceWordCount(projectFiles);
+  const estimatedCost = generationCreditCost(type, estimatedWords, settings.tokensPerCredit);
+  const notEnoughCredits = credits.balance < estimatedCost;
 
   const ensureProject = async (): Promise<string | null> => {
     if (projectId) return projectId;
@@ -297,6 +305,27 @@ function NewProjectPage() {
                 Document à corriger&nbsp;: <strong className="text-ink">obligatoire</strong>. La
                 correction s'applique au texte que vous chargez ici.
               </p>
+            )}
+            {requiresSource && projectFiles.length > 0 && (
+              <div className="mt-3 rounded-md border border-rule bg-paper-deep/40 p-4 text-sm">
+                <p className="text-ink">
+                  Texte extrait&nbsp;:{" "}
+                  <strong className="font-numeric tabular-nums">
+                    {estimatedWords.toLocaleString("fr-FR")}
+                  </strong>{" "}
+                  mots · Coût estimé&nbsp;:{" "}
+                  <strong className="font-numeric tabular-nums">{estimatedCost}</strong> crédits
+                </p>
+                <p className="mt-1 text-xs text-ink-soft">
+                  Estimation calculée avec la formule exacte du décompte final. Solde actuel&nbsp;:{" "}
+                  <span className="font-numeric tabular-nums">{credits.balance}</span> crédits.
+                </p>
+                {notEnoughCredits && (
+                  <p role="alert" className="mt-1 text-xs text-destructive">
+                    Crédits insuffisants pour lancer la correction.
+                  </p>
+                )}
+              </div>
             )}
             <label
               onDragOver={(e) => {

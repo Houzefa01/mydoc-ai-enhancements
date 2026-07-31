@@ -32,7 +32,7 @@ import {
   type User,
 } from "@/backend";
 import { typeLabels } from "./labels";
-import { exportCreditCost, generationCreditCost } from "./creditCosts";
+import { exportCreditCost, generationCreditCost, sourceWordCount } from "./creditCosts";
 import { DEFAULT_SETTINGS, type SystemSettings } from "@/backend/settings.types";
 
 const emptyCredits: CreditBalance = { balance: 0, transactions: [] };
@@ -300,9 +300,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (!project) return "Projet introuvable.";
 
         // Coût variable pour la correction : il dépend du volume de texte fourni.
-        const sourceWords = sourceFiles
-          .filter((f) => f.projectId === projectId)
-          .reduce((n, f) => n + (f.extractedText ?? "").split(/\s+/).filter(Boolean).length, 0);
+        const sourceWords = sourceWordCount(sourceFiles.filter((f) => f.projectId === projectId));
         const cost = generationCreditCost(project.type, sourceWords, settings.tokensPerCredit);
 
         if (userId && cost > 0) {
