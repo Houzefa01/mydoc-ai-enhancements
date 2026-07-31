@@ -260,6 +260,30 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_api_keys: {
+        Row: {
+          api_key: string
+          provider: string
+          updated_at: string
+          updated_by: string | null
+          updated_by_email: string
+        }
+        Insert: {
+          api_key: string
+          provider: string
+          updated_at?: string
+          updated_by?: string | null
+          updated_by_email?: string
+        }
+        Update: {
+          api_key?: string
+          provider?: string
+          updated_at?: string
+          updated_by?: string | null
+          updated_by_email?: string
+        }
+        Relationships: []
+      }
       source_files: {
         Row: {
           created_at: string
