@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   SETTING_LABELS,
+  type ProviderKeyStatus,
   type SettingsHistoryEntry,
   type SystemSettings,
 } from "./settings.types";
