@@ -11,6 +11,7 @@ import {
   adminListProviderModels,
   adminListSettingsHistory,
   adminSetProviderKey,
+  adminTestProviderKey,
   adminUpdateSettings,
 } from "@/backend/settings.functions";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ function AdminSettingsPage() {
   const listKeys = useServerFn(adminListProviderKeys);
   const setKey = useServerFn(adminSetProviderKey);
   const deleteKey = useServerFn(adminDeleteProviderKey);
+  const testKey = useServerFn(adminTestProviderKey);
 
   const { data, isPending } = useQuery({
     queryKey: ["admin", "settings"],
@@ -57,6 +59,7 @@ function AdminSettingsPage() {
   const [models, setModels] = useState<string[]>([]);
   const [modelsError, setModelsError] = useState<string | null>(null);
   const [keyDrafts, setKeyDrafts] = useState<Record<string, string>>({});
+  const [keyTests, setKeyTests] = useState<Record<string, { ok: boolean; message: string }>>({});
 
   const invalidateKeys = () => {
     void queryClient.invalidateQueries({ queryKey: ["admin", "settings", "keys"] });
@@ -78,6 +81,17 @@ function AdminSettingsPage() {
     onSuccess: () => {
       toast.success("Clé supprimée.");
       invalidateKeys();
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const tryKey = useMutation({
+    mutationFn: (input: { provider: string; apiKey: string }) => testKey({ data: input }),
+    onSuccess: (result, input) => {
+      setKeyTests((t) => ({ ...t, [input.provider]: result }));
+      if (result.ok) toast.success(result.message);
+      else toast.error(result.message);
+      void queryClient.invalidateQueries({ queryKey: ["admin", "settings", "history"] });
     },
     onError: (error: Error) => toast.error(error.message),
   });
