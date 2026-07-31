@@ -306,6 +306,27 @@ function NewProjectPage() {
                 correction s'applique au texte que vous chargez ici.
               </p>
             )}
+            {requiresSource && projectFiles.length > 0 && (
+              <div className="mt-3 rounded-md border border-rule bg-paper-deep/40 p-4 text-sm">
+                <p className="text-ink">
+                  Texte extrait&nbsp;:{" "}
+                  <strong className="font-numeric tabular-nums">
+                    {estimatedWords.toLocaleString("fr-FR")}
+                  </strong>{" "}
+                  mots · Coût estimé&nbsp;:{" "}
+                  <strong className="font-numeric tabular-nums">{estimatedCost}</strong> crédits
+                </p>
+                <p className="mt-1 text-xs text-ink-soft">
+                  Estimation calculée avec la formule exacte du décompte final. Solde actuel&nbsp;:{" "}
+                  <span className="font-numeric tabular-nums">{credits.balance}</span> crédits.
+                </p>
+                {notEnoughCredits && (
+                  <p role="alert" className="mt-1 text-xs text-destructive">
+                    Crédits insuffisants pour lancer la correction.
+                  </p>
+                )}
+              </div>
+            )}
             <label
               onDragOver={(e) => {
                 e.preventDefault();
