@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { DocumentType, SourceFile } from "@/backend/types";
 import { briefFields } from "@/lib/documentBriefs";
+import { generationCreditCost, sourceWordCount } from "@/lib/creditCosts";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/projects/new")({
@@ -110,6 +111,8 @@ function NewProjectPage() {
     generateOutline,
     updateSourceFileDescription,
     removeSourceFile,
+    settings,
+    credits,
   } = useStore();
   const navigate = useNavigate();
 
@@ -124,6 +127,11 @@ function NewProjectPage() {
   // La correction retravaille un texte existant : sans fichier source, il n'y a
   // rien à corriger.
   const requiresSource = type === "correction";
+
+  // Estimation affichée avant lancement : même formule que le décompte final.
+  const estimatedWords = sourceWordCount(projectFiles);
+  const estimatedCost = generationCreditCost(type, estimatedWords, settings.tokensPerCredit);
+  const notEnoughCredits = credits.balance < estimatedCost;
 
   const ensureProject = async (): Promise<string | null> => {
     if (projectId) return projectId;
