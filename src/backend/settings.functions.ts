@@ -181,7 +181,11 @@ export const adminListProviderKeys = createServerFn({ method: "GET" })
         provider: id,
         label: p.label,
         configured: Boolean(value),
-        source: row?.api_key?.trim() ? "interface" : envKey ? "environnement" : "aucune",
+        source: (row?.api_key?.trim()
+          ? "interface"
+          : envKey
+            ? "environnement"
+            : "aucune") as ProviderKeyStatus["source"],
         masked: value ? `••••${value.slice(-4)}` : "",
         updatedByEmail: row?.updated_by_email ?? "",
         updatedAt: row?.updated_at ?? "",
