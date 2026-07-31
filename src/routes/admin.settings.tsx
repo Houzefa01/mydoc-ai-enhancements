@@ -313,6 +313,18 @@ function AdminSettingsPage() {
                 >
                   Enregistrer
                 </Button>
+                <Button
+                  variant="outline"
+                  disabled={tryKey.isPending}
+                  onClick={() =>
+                    tryKey.mutate({
+                      provider: k.provider,
+                      apiKey: (keyDrafts[k.provider] ?? "").trim(),
+                    })
+                  }
+                >
+                  Tester la clé
+                </Button>
                 {k.source === "interface" && (
                   <Button
                     variant="outline"
@@ -323,6 +335,14 @@ function AdminSettingsPage() {
                   </Button>
                 )}
               </div>
+              {keyTests[k.provider] && (
+                <p
+                  role="status"
+                  className={`text-xs ${keyTests[k.provider].ok ? "text-primary" : "text-destructive"}`}
+                >
+                  {keyTests[k.provider].message}
+                </p>
+              )}
             </div>
           ))}
         </CardContent>
