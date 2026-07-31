@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { extractFileText } from "@/lib/extractText";
 import { slugify } from "@/lib/exporters";
 import { mapSource, type Row } from "./mappers";
 import type { SourceFile } from "./types";
@@ -25,16 +26,17 @@ export const sourcesApi = {
   ): Promise<{ error: string } | { file: SourceFile }> {
     if (file.size > 25_000_000) return { error: "Fichier trop lourd (25 Mo maximum)." };
     const kind = fileKind(file.name);
+
+    // Le texte est extrait avant l'envoi : sans lui, la Correction ne peut ni
+    // être chiffrée en crédits (nombre de mots) ni être générée.
+    const extraction = await extractFileText(file, kind);
+    if ("error" in extraction) return { error: extraction.error };
+
     const path = `${ownerId}/${projectId}/${Date.now()}-${slugify(file.name)}`;
     const { error: upErr } = await supabase.storage
       .from("sources")
       .upload(path, file, { contentType: file.type || "application/octet-stream" });
     if (upErr) return { error: upErr.message };
-
-    let extracted = "";
-    if (kind === "txt" && file.size < 500_000) {
-      extracted = (await file.text()).slice(0, 20000);
-    }
 
     const { data, error } = await supabase
       .from("source_files")
@@ -45,7 +47,7 @@ export const sourcesApi = {
         size_bytes: file.size,
         type: kind,
         status: "pret",
-        extracted_text: extracted,
+        extracted_text: extraction.text,
         description: description ?? "",
         storage_path: path,
       })

@@ -6,8 +6,11 @@ import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import {
   adminGetSettings,
+  adminDeleteProviderKey,
+  adminListProviderKeys,
   adminListProviderModels,
   adminListSettingsHistory,
+  adminSetProviderKey,
   adminUpdateSettings,
 } from "@/backend/settings.functions";
 import { Button } from "@/components/ui/button";
@@ -30,6 +33,9 @@ function AdminSettingsPage() {
   const updateSettings = useServerFn(adminUpdateSettings);
   const listHistory = useServerFn(adminListSettingsHistory);
   const listModels = useServerFn(adminListProviderModels);
+  const listKeys = useServerFn(adminListProviderKeys);
+  const setKey = useServerFn(adminSetProviderKey);
+  const deleteKey = useServerFn(adminDeleteProviderKey);
 
   const { data, isPending } = useQuery({
     queryKey: ["admin", "settings"],
@@ -39,6 +45,10 @@ function AdminSettingsPage() {
     queryKey: ["admin", "settings", "history"],
     queryFn: () => listHistory(),
   });
+  const { data: keys } = useQuery({
+    queryKey: ["admin", "settings", "keys"],
+    queryFn: () => listKeys(),
+  });
 
   const [tokens, setTokens] = useState("");
   const [price, setPrice] = useState("");
@@ -46,6 +56,31 @@ function AdminSettingsPage() {
   const [model, setModel] = useState("");
   const [models, setModels] = useState<string[]>([]);
   const [modelsError, setModelsError] = useState<string | null>(null);
+  const [keyDrafts, setKeyDrafts] = useState<Record<string, string>>({});
+
+  const invalidateKeys = () => {
+    void queryClient.invalidateQueries({ queryKey: ["admin", "settings", "keys"] });
+    void queryClient.invalidateQueries({ queryKey: ["admin", "settings", "history"] });
+  };
+
+  const saveKey = useMutation({
+    mutationFn: (input: { provider: string; apiKey: string }) => setKey({ data: input }),
+    onSuccess: (_r, input) => {
+      toast.success("Clé d'API enregistrée.");
+      setKeyDrafts((d) => ({ ...d, [input.provider]: "" }));
+      invalidateKeys();
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const removeKey = useMutation({
+    mutationFn: (provider: string) => deleteKey({ data: { provider } }),
+    onSuccess: () => {
+      toast.success("Clé supprimée.");
+      invalidateKeys();
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
 
   useEffect(() => {
     if (!data) return;
@@ -214,6 +249,68 @@ function AdminSettingsPage() {
               {modelsError}
             </p>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Clés d'API des fournisseurs</CardTitle>
+          <CardDescription>
+            Les clés sont stockées côté serveur et ne sont jamais renvoyées au navigateur : seuls
+            les quatre derniers caractères sont affichés. Une clé saisie ici remplace celle définie
+            dans l'environnement.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          {(keys ?? []).map((k) => (
+            <div key={k.provider} className="space-y-2 border-b border-rule pb-4 last:border-0 last:pb-0">
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span className="font-medium">{k.label}</span>
+                <span className="font-numeric text-sm text-ink-soft">
+                  {k.configured ? `${k.masked} · source : ${k.source}` : "aucune clé enregistrée"}
+                </span>
+                {k.updatedAt && (
+                  <span className="ml-auto text-xs text-ink-soft">
+                    {k.updatedByEmail || "compte inconnu"} ·{" "}
+                    {new Date(k.updatedAt).toLocaleString("fr-FR")}
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Input
+                  type="password"
+                  autoComplete="off"
+                  placeholder={k.configured ? "Nouvelle clé (remplace l'actuelle)" : "Coller la clé d'API"}
+                  value={keyDrafts[k.provider] ?? ""}
+                  onChange={(e) =>
+                    setKeyDrafts((d) => ({ ...d, [k.provider]: e.target.value }))
+                  }
+                  className="max-w-sm"
+                  aria-label={`Clé d'API ${k.label}`}
+                />
+                <Button
+                  disabled={saveKey.isPending || !(keyDrafts[k.provider] ?? "").trim()}
+                  onClick={() =>
+                    saveKey.mutate({
+                      provider: k.provider,
+                      apiKey: (keyDrafts[k.provider] ?? "").trim(),
+                    })
+                  }
+                >
+                  Enregistrer
+                </Button>
+                {k.source === "interface" && (
+                  <Button
+                    variant="outline"
+                    disabled={removeKey.isPending}
+                    onClick={() => removeKey.mutate(k.provider)}
+                  >
+                    Supprimer
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
         </CardContent>
       </Card>
 

@@ -50,11 +50,29 @@ function providerOrThrow(provider: string): ProviderConfig {
   return config;
 }
 
-function apiKeyOrThrow(config: ProviderConfig): string {
-  const key = process.env[config.keyEnv];
+/**
+ * Clé d'API du fournisseur : la valeur saisie dans l'espace admin prime, la
+ * variable d'environnement sert de repli. La clé ne quitte jamais le serveur.
+ */
+export async function providerApiKey(
+  providerId: string,
+  config: ProviderConfig,
+): Promise<string | null> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("provider_api_keys")
+    .select("api_key")
+    .eq("provider", providerId)
+    .maybeSingle();
+  const stored = (data as { api_key?: string } | null)?.api_key?.trim();
+  return stored || process.env[config.keyEnv] || null;
+}
+
+async function apiKeyOrThrow(providerId: string, config: ProviderConfig): Promise<string> {
+  const key = await providerApiKey(providerId, config);
   if (!key)
     throw new Error(
-      `Clé d'API absente pour ${config.label} : ajoutez le secret ${config.keyEnv} côté serveur.`,
+      `Clé d'API absente pour ${config.label} : enregistrez-la dans Paramètres système.`,
     );
   return key;
 }
@@ -62,7 +80,7 @@ function apiKeyOrThrow(config: ProviderConfig): string {
 /** Liste, en direct, les modèles réellement disponibles chez le fournisseur. */
 export async function listProviderModels(provider: string): Promise<string[]> {
   const config = providerOrThrow(provider);
-  const key = apiKeyOrThrow(config);
+  const key = await apiKeyOrThrow(provider, config);
 
   let response: Response;
   try {
@@ -111,6 +129,6 @@ export async function resolveGenerationConfig(): Promise<{
     provider: config,
     providerId,
     model: data?.ai_model ?? "deepseek-chat",
-    apiKey: apiKeyOrThrow(config),
+    apiKey: await apiKeyOrThrow(providerId, config),
   };
 }

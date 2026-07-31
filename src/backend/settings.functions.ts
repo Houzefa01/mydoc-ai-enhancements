@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   SETTING_LABELS,
+  type ProviderKeyStatus,
   type SettingsHistoryEntry,
   type SystemSettings,
 } from "./settings.types";
@@ -132,7 +133,11 @@ export const adminListSettingsHistory = createServerFn({ method: "GET" })
     return (data ?? []).map((r) => ({
       id: r.id,
       settingKey: r.setting_key,
-      settingLabel: SETTING_LABELS[r.setting_key] ?? r.setting_key,
+      settingLabel:
+        SETTING_LABELS[r.setting_key] ??
+        (r.setting_key.startsWith("api_key_")
+          ? `Clé d'API — ${r.setting_key.replace("api_key_", "")}`
+          : r.setting_key),
       oldValue: r.old_value ?? "",
       newValue: r.new_value ?? "",
       changedByEmail: r.changed_by_email ?? "",
@@ -153,4 +158,96 @@ export const adminListProviderModels = createServerFn({ method: "POST" })
     } catch (error) {
       return { models: [], error: (error as Error).message };
     }
+  });
+
+/**
+ * État des clés d'API par fournisseur : jamais la valeur, seulement un aperçu
+ * masqué (4 derniers caractères) et la provenance.
+ */
+export const adminListProviderKeys = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<ProviderKeyStatus[]> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { PROVIDERS } = await import("./ai.server");
+    const { data } = await supabaseAdmin.from("provider_api_keys").select("*");
+    const rows = (data ?? []) as {
+      provider: string;
+      api_key: string;
+      updated_by_email: string | null;
+      updated_at: string;
+    }[];
+    return Object.entries(PROVIDERS).map(([id, p]) => {
+      const row = rows.find((r) => r.provider === id);
+      const envKey = process.env[p.keyEnv];
+      const value = row?.api_key?.trim() || envKey || "";
+      return {
+        provider: id,
+        label: p.label,
+        configured: Boolean(value),
+        source: (row?.api_key?.trim()
+          ? "interface"
+          : envKey
+            ? "environnement"
+            : "aucune") as ProviderKeyStatus["source"],
+        masked: value ? `••••${value.slice(-4)}` : "",
+        updatedByEmail: row?.updated_by_email ?? "",
+        updatedAt: row?.updated_at ?? "",
+      };
+    });
+  });
+
+/** Enregistre ou remplace la clé d'API d'un fournisseur (admin uniquement). */
+export const adminSetProviderKey = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { provider: string; apiKey: string }) => {
+    if (!data.apiKey || data.apiKey.trim().length < 8)
+      throw new Error("La clé d'API semble incomplète.");
+    return { provider: data.provider, apiKey: data.apiKey.trim() };
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { PROVIDERS } = await import("./ai.server");
+    if (!PROVIDERS[data.provider]) throw new Error("Fournisseur IA inconnu.");
+
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("email")
+      .eq("id", context.userId)
+      .maybeSingle();
+
+    const { error } = await supabaseAdmin.from("provider_api_keys").upsert(
+      {
+        provider: data.provider,
+        api_key: data.apiKey,
+        updated_by: context.userId,
+        updated_by_email: profile?.email ?? "",
+        updated_at: new Date().toISOString(),
+      } as never,
+      { onConflict: "provider" },
+    );
+    if (error) throw new Error(error.message);
+
+    // Historique : on trace le changement sans jamais y écrire la clé.
+    await supabaseAdmin.from("system_settings_history").insert({
+      setting_key: `api_key_${data.provider}`,
+      old_value: "",
+      new_value: `clé mise à jour (••••${data.apiKey.slice(-4)})`,
+      changed_by: context.userId,
+      changed_by_email: profile?.email ?? "",
+    } as never);
+
+    return { ok: true };
+  });
+
+/** Supprime la clé saisie dans l'interface (le repli d'environnement subsiste). */
+export const adminDeleteProviderKey = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { provider: string }) => data)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("provider_api_keys").delete().eq("provider", data.provider);
+    return { ok: true };
   });
