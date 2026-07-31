@@ -135,7 +135,9 @@ export const adminListSettingsHistory = createServerFn({ method: "GET" })
       settingKey: r.setting_key,
       settingLabel:
         SETTING_LABELS[r.setting_key] ??
-        (r.setting_key.startsWith("api_key_")
+        (r.setting_key.startsWith("api_key_test_")
+          ? `Test de clé — ${r.setting_key.replace("api_key_test_", "")}`
+          : r.setting_key.startsWith("api_key_")
           ? `Clé d'API — ${r.setting_key.replace("api_key_", "")}`
           : r.setting_key),
       oldValue: r.old_value ?? "",
@@ -239,6 +241,39 @@ export const adminSetProviderKey = createServerFn({ method: "POST" })
     } as never);
 
     return { ok: true };
+  });
+
+/** Supprime la clé saisie dans l'interface (le repli d'environnement subsiste). */
+export const adminTestProviderKey = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { provider: string; apiKey?: string }) => ({
+    provider: data.provider,
+    apiKey: (data.apiKey ?? "").trim(),
+  }))
+  .handler(async ({ data, context }): Promise<{ ok: boolean; message: string }> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { PROVIDERS, verifyProviderKey } = await import("./ai.server");
+    if (!PROVIDERS[data.provider]) throw new Error("Fournisseur IA inconnu.");
+
+    const result = await verifyProviderKey(data.provider, data.apiKey);
+
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("email")
+      .eq("id", context.userId)
+      .maybeSingle();
+
+    // Audit : uniquement le résultat et un aperçu masqué, jamais la clé.
+    await supabaseAdmin.from("system_settings_history").insert({
+      setting_key: `api_key_test_${data.provider}`,
+      old_value: data.apiKey ? "clé saisie (non enregistrée)" : "clé enregistrée",
+      new_value: `${result.ok ? "valide" : "invalide"}${result.masked ? ` (${result.masked})` : ""} — ${result.message}`,
+      changed_by: context.userId,
+      changed_by_email: profile?.email ?? "",
+    } as never);
+
+    return { ok: result.ok, message: result.message };
   });
 
 /** Supprime la clé saisie dans l'interface (le repli d'environnement subsiste). */
