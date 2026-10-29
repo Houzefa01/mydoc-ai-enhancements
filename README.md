@@ -23,8 +23,8 @@ Espace **administration** (utilisateurs, exports, paramètres et rôles).
 
 ## Statut
 
-Version la plus avancée du projet (après `document-craft` et
-`remix-of-remix-of-document-craft`) : backend applicatif dans `src/backend/` (auth, projets,
+Version de référence du projet. Elle regroupe les itérations précédentes
+(`document-craft`, puis un remix) : backend applicatif dans `src/backend/` (auth, projets,
 sources, plans, documents, exports, crédits, rôles, IA côté serveur), migrations Supabase
 et rôles administrateur.
 
